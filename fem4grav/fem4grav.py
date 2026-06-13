@@ -175,3 +175,67 @@ def compute_regional(reg_nodes, irow: int, icol: int):
 
     n_shape = shape_functions(irow, icol)
     return np.tensordot(reg_nodes, n_shape, axes=(0, 0))
+
+def separate_grid(obs_grid, x_axis, y_axis):
+    obs_grid = np.asarray(obs_grid, dtype=float)
+    if obs_grid.ndim != 2:
+        raise ValueError("obs_grid must be a 2D array")
+
+    irow, icol = obs_grid.shape
+    reg_nodes = extract_nodes(obs_grid, x_axis, y_axis)
+    reg_grid = compute_regional(reg_nodes, irow, icol)
+    res_grid = obs_grid - reg_grid
+
+    return FemResult(
+        x_axis=np.asarray(x_axis, dtype=float),
+        y_axis=np.asarray(y_axis, dtype=float),
+        obs_grid=obs_grid,
+        reg_grid=reg_grid,
+        res_grid=res_grid,
+        reg_nodes=reg_nodes,
+    )
+
+def run_fem(file_name, irow=75, icol=101, skiprows=0, method="cubic", delimiter=None):
+    x, y, z = load_xyz(file_name, skiprows=skiprows, delimiter=delimiter)
+    x_axis, y_axis, obs_grid = regular_grid(x, y, z, irow, icol, method=method)
+    return separate_grid(obs_grid, x_axis, y_axis)
+
+def summary(result: FemResult):
+    irow, icol = result.obs_grid.shape
+
+    print("=" * 58)
+    print("  fem4grav - FEM regional/residual separation")
+    print("=" * 58)
+    print(f"  Grid : {irow} rows x {icol} columns")
+    print(f"  X    : [{result.x_axis.min():.4f}, {result.x_axis.max():.4f}]")
+    print(f"  Y    : [{resul    t.y_axis.min():.4f}, {result.y_axis.max():.4f}]")
+    print()kvi
+
+    labels = [
+        "bottom-left",
+        "bottom-middle",
+        "bottom-right",
+        "right-middle",
+        "top-right",
+        "top-middle",
+        "top-left",
+        "left-middle",
+    ]
+    print("  Boundary nodes:")
+    for idx, (label, value) in enumerate(zip(labels, result.reg_nodes), start=1):
+        print(f"    {idx}. {label:<13} {value:+.4f} mGal")
+
+    print()
+    print(f"  {'grid':<10} {'min':>10} {'max':>10} {'mean':>10} {'std':>10}")
+    print(f"  {'-' * 52}")
+    for name, grid in [
+        ("observed", result.obs_grid),
+        ("regional", result.reg_grid),
+        ("residual", result.res_grid),
+    ]:
+        print(
+            f"  {name:<10} "
+            f"{grid.min():>10.4f} {grid.max():>10.4f} "
+            f"{grid.mean():>10.4f} {grid.std():>10.4f}"
+        )
+    print("=" * 58)
