@@ -8,7 +8,6 @@ import numpy as np
 
 TextPath = str | PathLike[str]
 
-
 @dataclass
 class FemResult:
     x_axis: np.ndarray
@@ -18,13 +17,11 @@ class FemResult:
     res_grid: np.ndarray
     reg_nodes: np.ndarray
 
-
 def validate_grid(irow: int, icol: int):
     if not isinstance(irow, int) or not isinstance(icol, int):
         raise TypeError("irow and icol must be integers")
     if irow < 2 or icol < 2:
         raise ValueError("irow and icol must be >= 2")
-
 
 def _validate_xyz(x, y, z):
     x = np.asarray(x, dtype=float)
@@ -41,7 +38,6 @@ def _validate_xyz(x, y, z):
         raise ValueError("x, y and z must contain only finite values")
 
     return x, y, z
-
 
 def _sort_xy(axis, values):
     axis = np.asarray(axis, dtype=float)
@@ -63,13 +59,11 @@ def _sort_xy(axis, values):
 
     return axis, values
 
-
 def load_xyz(file_name: TextPath, skiprows=0, delimiter=None):
     data = np.loadtxt(file_name, skiprows=skiprows, delimiter=delimiter)
     if data.ndim != 2 or data.shape[1] < 3:
         raise ValueError("file must contain at least three columns: x, y, anomaly")
     return _validate_xyz(data[:, 0], data[:, 1], data[:, 2])
-
 
 def save_grid(result: FemResult, file_name: TextPath):
     np.savez(
@@ -81,7 +75,6 @@ def save_grid(result: FemResult, file_name: TextPath):
         res_grid=result.res_grid,
         reg_nodes=result.reg_nodes,
     )
-
 
 def save_table(result: FemResult, file_name: TextPath):
     x_grid, y_grid = np.meshgrid(result.x_axis, result.y_axis)
@@ -95,3 +88,25 @@ def save_table(result: FemResult, file_name: TextPath):
         ]
     )
     np.savetxt(file_name, table, header="x y observed regional residual", comments="", fmt="%.10g")
+
+def regular_grid(x, y, z, irow: int, icol: int, method="cubic"):
+    from scipy.interpolate import griddata
+
+    validate_grid(irow, icol)
+    if method not in {"nearest", "linear", "cubic"}:
+        raise ValueError("method must be 'nearest', 'linear' or 'cubic'")
+
+    x, y, z = _validate_xyz(x, y, z)
+
+    x_axis = np.linspace(float(np.min(x)), float(np.max(x)), icol)
+    y_axis = np.linspace(float(np.min(y)), float(np.max(y)), irow)
+    x_grid, y_grid = np.meshgrid(x_axis, y_axis)
+
+    obs_grid = griddata((x, y), z, (x_grid, y_grid), method=method)
+
+    # cubic and linear interpolation sometimes leave empty cells on the border
+    if np.isnan(obs_grid).any():
+        nearest = griddata((x, y), z, (x_grid, y_grid), method="nearest")
+        obs_grid = np.where(np.isnan(obs_grid), nearest, obs_grid)
+
+    return x_axis, y_axis, obs_grid
