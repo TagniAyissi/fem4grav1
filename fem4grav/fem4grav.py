@@ -139,3 +139,39 @@ def extract_nodes(obs_grid, x_axis, y_axis):
     node_8 = middle_value(y_axis, obs_grid[:, 0])
 
     return np.array([node_1, node_2, node_3, node_4, node_5, node_6, node_7, node_8])
+
+def shape_functions(irow: int, icol: int):
+    validate_grid(irow, icol)
+
+    zeta_1d = np.linspace(-1.0, 1.0, icol)
+    eta_1d = np.linspace(-1.0, 1.0, irow)
+    zeta, eta = np.meshgrid(zeta_1d, eta_1d)
+
+    node_zeta = np.array([-1, 0, 1, 1, 1, 0, -1, -1], dtype=float)
+    node_eta = np.array([-1, -1, -1, 0, 1, 1, 1, 0], dtype=float)
+    n_shape = np.zeros((8, irow, icol), dtype=float)
+
+    for node in range(8):
+        if node in (0, 2, 4, 6):
+            n_shape[node] = (
+                (1.0 + zeta * node_zeta[node])
+                * (1.0 + eta * node_eta[node])
+                * (zeta * node_zeta[node] + eta * node_eta[node] - 1.0)
+                / 4.0
+            )
+        elif node in (1, 5):
+            n_shape[node] = (1.0 - zeta**2) * (1.0 + eta * node_eta[node]) / 2.0
+        else:
+            n_shape[node] = (1.0 - eta**2) * (1.0 + zeta * node_zeta[node]) / 2.0
+
+    return n_shape
+
+def compute_regional(reg_nodes, irow: int, icol: int):
+    reg_nodes = np.asarray(reg_nodes, dtype=float)
+    if reg_nodes.shape != (8,):
+        raise ValueError("reg_nodes must contain exactly 8 values")
+    if not np.isfinite(reg_nodes).all():
+        raise ValueError("reg_nodes must contain only finite values")
+
+    n_shape = shape_functions(irow, icol)
+    return np.tensordot(reg_nodes, n_shape, axes=(0, 0))
