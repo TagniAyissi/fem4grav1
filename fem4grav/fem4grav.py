@@ -110,3 +110,32 @@ def regular_grid(x, y, z, irow: int, icol: int, method="cubic"):
         obs_grid = np.where(np.isnan(obs_grid), nearest, obs_grid)
 
     return x_axis, y_axis, obs_grid
+
+def middle_value(axis, values):
+    axis, values = _sort_xy(axis, values)
+    middle_coord = 0.5 * (axis[0] + axis[-1])
+    return float(np.interp(middle_coord, axis, values))
+
+def extract_nodes(obs_grid, x_axis, y_axis):
+    obs_grid = np.asarray(obs_grid, dtype=float)
+    if obs_grid.ndim != 2:
+        raise ValueError("obs_grid must be a 2D array")
+
+    irow, icol = obs_grid.shape
+    validate_grid(irow, icol)
+
+    if len(x_axis) != icol or len(y_axis) != irow:
+        raise ValueError("x_axis/y_axis do not match the grid size")
+    if not np.isfinite(obs_grid).all():
+        raise ValueError("obs_grid must contain only finite values")
+
+    node_1 = obs_grid[0, 0]
+    node_2 = middle_value(x_axis, obs_grid[0, :])
+    node_3 = obs_grid[0, -1]
+    node_4 = middle_value(y_axis, obs_grid[:, -1])
+    node_5 = obs_grid[-1, -1]
+    node_6 = middle_value(x_axis, obs_grid[-1, :])
+    node_7 = obs_grid[-1, 0]
+    node_8 = middle_value(y_axis, obs_grid[:, 0])
+
+    return np.array([node_1, node_2, node_3, node_4, node_5, node_6, node_7, node_8])
