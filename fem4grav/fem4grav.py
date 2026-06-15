@@ -237,8 +237,8 @@ def summary(result: FemResult):
     print("=" * 58)
     print(f"  Grid : {irow} rows x {icol} columns")
     print(f"  X    : [{result.x_axis.min():.4f}, {result.x_axis.max():.4f}]")
-    print(f"  Y    : [{resul    t.y_axis.min():.4f}, {result.y_axis.max():.4f}]")
-    print()kvi
+    print(f"  Y    : [{result.y_axis.min():.4f}, {result.y_axis.max():.4f}]")
+    print()
 
     labels = [
         "bottom-left",
