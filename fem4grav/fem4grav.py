@@ -10,6 +10,8 @@ TextPath = str | PathLike[str]
 
 @dataclass
 class FemResult:
+    """Data container for the FEM separation pipeline results. Stores the spatial axes, the three gravity field grids (observed, 
+    regional background, and local residual), and the 8 boundary nodes"""
     x_axis: np.ndarray
     y_axis: np.ndarray
     obs_grid: np.ndarray
@@ -18,12 +20,15 @@ class FemResult:
     reg_nodes: np.ndarray
 
 def validate_grid(irow: int, icol: int):
+    """Ensure the computational mesh dimensions are valid"""
     if not isinstance(irow, int) or not isinstance(icol, int):
         raise TypeError("irow and icol must be integers")
     if irow < 2 or icol < 2:
         raise ValueError("irow and icol must be >= 2")
 
 def _validate_xyz(x, y, z):
+    """Internal check for scattered gravity survey data. Ensures that spatial coordinates (x, y) and gravity anomalies (z)
+    are strictly 1D arrays of equal length and contain no NaN/Inf values"""
     x = np.asarray(x, dtype=float)
     y = np.asarray(y, dtype=float)
     z = np.asarray(z, dtype=float)
@@ -40,6 +45,8 @@ def _validate_xyz(x, y, z):
     return x, y, z
 
 def _sort_xy(axis, values):
+    """Internal helper to sort coordinate arrays. Crucial for 1D interpolation along the mesh boundaries to prevent 
+    self-intersecting geometries or repeated nodes"""
     axis = np.asarray(axis, dtype=float)
     values = np.asarray(values, dtype=float)
 
@@ -60,12 +67,14 @@ def _sort_xy(axis, values):
     return axis, values
 
 def load_xyz(file_name: TextPath, skiprows=0, delimiter=None):
+    """Read raw gravity survey data from an ASCII file. Expects standard format: Easting/Longitude, Northing/Latitude, Anomaly"""
     data = np.loadtxt(file_name, skiprows=skiprows, delimiter=delimiter)
     if data.ndim != 2 or data.shape[1] < 3:
         raise ValueError("file must contain at least three columns: x, y, anomaly")
     return _validate_xyz(data[:, 0], data[:, 1], data[:, 2])
 
 def save_grid(result: FemResult, file_name: TextPath):
+    """Export the entire result object as a compressed NumPy binary"""
     np.savez(
         file_name,
         x_axis=result.x_axis,
@@ -77,6 +86,8 @@ def save_grid(result: FemResult, file_name: TextPath):
     )
 
 def save_table(result: FemResult, file_name: TextPath):
+    """Export the separated grids to a standard XYZ text file. This is the preferred format for importing the processed fields into 
+    GIS software or 3D geological modeling environments"""
     x_grid, y_grid = np.meshgrid(result.x_axis, result.y_axis)
     table = np.column_stack(
         [
@@ -90,6 +101,8 @@ def save_table(result: FemResult, file_name: TextPath):
     np.savetxt(file_name, table, header="x y observed regional residual", comments="", fmt="%.10g")
 
 def regular_grid(x, y, z, irow: int, icol: int, method="cubic"):
+    """Interpolate scattered field stations onto a regular computational mesh.
+    This is a strict requirement before applying the Finite Element shape functions"""
     from scipy.interpolate import griddata
 
     validate_grid(irow, icol)
@@ -105,6 +118,7 @@ def regular_grid(x, y, z, irow: int, icol: int, method="cubic"):
     obs_grid = griddata((x, y), z, (x_grid, y_grid), method=method)
 
     # cubic and linear interpolation sometimes leave empty cells on the border
+    #We patch these edge gaps using nearest-neighbor to ensure the mesh is watertight
     if np.isnan(obs_grid).any():
         nearest = griddata((x, y), z, (x_grid, y_grid), method="nearest")
         obs_grid = np.where(np.isnan(obs_grid), nearest, obs_grid)
@@ -112,11 +126,14 @@ def regular_grid(x, y, z, irow: int, icol: int, method="cubic"):
     return x_axis, y_axis, obs_grid
 
 def middle_value(axis, values):
+    """Interpolate the gravity value at the exact geometric midpoint of a grid edge. Used for extracting the mid-side nodes of our 8-node element"""
     axis, values = _sort_xy(axis, values)
     middle_coord = 0.5 * (axis[0] + axis[-1])
     return float(np.interp(middle_coord, axis, values))
 
 def extract_nodes(obs_grid, x_axis, y_axis):
+    """Identify the 8 boundary nodes of the observed gravity grid. These nodes (4 corners + 4 edge midpoints) act as the control points 
+    to define the regional trend surface"""
     obs_grid = np.asarray(obs_grid, dtype=float)
     if obs_grid.ndim != 2:
         raise ValueError("obs_grid must be a 2D array")
@@ -141,32 +158,39 @@ def extract_nodes(obs_grid, x_axis, y_axis):
     return np.array([node_1, node_2, node_3, node_4, node_5, node_6, node_7, node_8])
 
 def shape_functions(irow: int, icol: int):
+    """Compute the isoparametric shape functions for an 8-node serendipity element. These functions map the local natural coordinates (zeta, eta from -1 to 1) 
+    over the entire grid to smoothly interpolate the regional field"""
     validate_grid(irow, icol)
 
+    #setup the natural coordinate system
     zeta_1d = np.linspace(-1.0, 1.0, icol)
     eta_1d = np.linspace(-1.0, 1.0, irow)
     zeta, eta = np.meshgrid(zeta_1d, eta_1d)
 
+    #local coordinates for the 8 boundary nodes
     node_zeta = np.array([-1, 0, 1, 1, 1, 0, -1, -1], dtype=float)
     node_eta = np.array([-1, -1, -1, 0, 1, 1, 1, 0], dtype=float)
     n_shape = np.zeros((8, irow, icol), dtype=float)
 
+    #evaluate the shape functions
     for node in range(8):
-        if node in (0, 2, 4, 6):
+        if node in (0, 2, 4, 6): #corner nodes
             n_shape[node] = (
                 (1.0 + zeta * node_zeta[node])
                 * (1.0 + eta * node_eta[node])
                 * (zeta * node_zeta[node] + eta * node_eta[node] - 1.0)
                 / 4.0
             )
-        elif node in (1, 5):
+        elif node in (1, 5): #mid-nodes along horizontal edges
             n_shape[node] = (1.0 - zeta**2) * (1.0 + eta * node_eta[node]) / 2.0
-        else:
+        else:   #mid-nodes along vertical edges
             n_shape[node] = (1.0 - eta**2) * (1.0 + zeta * node_zeta[node]) / 2.0
 
     return n_shape
 
 def compute_regional(reg_nodes, irow: int, icol: int):
+    """Construct the regional gravity field. This is done by projecting the extracted boundary nodes across the mesh 
+    using the 8-node serendipity shape functions"""
     reg_nodes = np.asarray(reg_nodes, dtype=float)
     if reg_nodes.shape != (8,):
         raise ValueError("reg_nodes must contain exactly 8 values")
@@ -174,9 +198,12 @@ def compute_regional(reg_nodes, irow: int, icol: int):
         raise ValueError("reg_nodes must contain only finite values")
 
     n_shape = shape_functions(irow, icol)
+    #tensor dot product efficiently multiplies each node value by its corresponding shape grid
     return np.tensordot(reg_nodes, n_shape, axes=(0, 0))
 
 def separate_grid(obs_grid, x_axis, y_axis):
+    """Perform the core Bouguer gravity anomaly separation. Extracts the regional trend from the observed field to isolate 
+    the local residual anomalies (shallow geological features)"""
     obs_grid = np.asarray(obs_grid, dtype=float)
     if obs_grid.ndim != 2:
         raise ValueError("obs_grid must be a 2D array")
@@ -184,7 +211,7 @@ def separate_grid(obs_grid, x_axis, y_axis):
     irow, icol = obs_grid.shape
     reg_nodes = extract_nodes(obs_grid, x_axis, y_axis)
     reg_grid = compute_regional(reg_nodes, irow, icol)
-    res_grid = obs_grid - reg_grid
+    res_grid = obs_grid - reg_grid # Residual = Observed - Regional
 
     return FemResult(
         x_axis=np.asarray(x_axis, dtype=float),
@@ -196,11 +223,13 @@ def separate_grid(obs_grid, x_axis, y_axis):
     )
 
 def run_fem(file_name, irow=75, icol=101, skiprows=0, method="cubic", delimiter=None):
+    """End-to-end wrapper for the entire FEM pipeline. Reads raw survey data, meshes it, and executes the regional/residual separation"""
     x, y, z = load_xyz(file_name, skiprows=skiprows, delimiter=delimiter)
     x_axis, y_axis, obs_grid = regular_grid(x, y, z, irow, icol, method=method)
     return separate_grid(obs_grid, x_axis, y_axis)
 
 def summary(result: FemResult):
+    """Print a formatted statistical overview of the separation results. Useful for quick QA/QC checks on the gravity datasets in the terminal"""
     irow, icol = result.obs_grid.shape
 
     print("=" * 58)
