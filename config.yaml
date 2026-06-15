@@ -1,0 +1,9 @@
+data_file: "data/Flegrei.txt"
+#default grid and interpolation parameters
+irow: 75
+icol: 101
+method: "cubic"
+#input and output file paths
+output_npz: "results/flegrei.npz"
+output_txt: "results/flegrei_table.txt"
+plot_file: "images/flegrei_maps.png"
