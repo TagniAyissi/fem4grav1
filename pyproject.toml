@@ -1,0 +1,36 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "fem4grav"
+version = "0.0.1"
+description = "Finite Element Method (FEM) for regional-residual separation of gravity anomaly maps"
+readme = "README.md"
+requires-python = ">=3.10"
+license = "MIT"
+authors = [
+  { name = "Ayissi Mballa TAGNI", email = "tagniayissimballa@gmail.com" },
+]
+dependencies = [
+  "numpy>=1.23",
+  "scipy>=1.9",
+  "matplotlib>=3.6",
+]
+
+[project.scripts]
+fem4grav = "fem4grav.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["fem4grav*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[tool.coverage.run]
+source = ["fem4grav"]
+omit = ["*/tests/*"]
+
+[tool.coverage.report]
+show_missing = true
