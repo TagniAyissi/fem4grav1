@@ -18,6 +18,33 @@ dependencies = [
   "matplotlib>=3.6",
 ]
 
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Science/Research",
+    "Topic :: Scientific/Engineering :: Geophysics",
+    "Natural Language :: English",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: Implementation :: CPython"
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest",
+    "pytest-cov",
+    "flake8",
+    "snakemake"
+]
+
+# Les liens utiles qui apparaîtront sur la page du projet
+[project.urls]
+Homepage = "https://github.com/TagniAyissi/fem4grav1"
+"Bug Tracker" = "https://github.com/TagniAyissi/fem4grav1/issues"
+
 [project.scripts]
 fem4grav = "fem4grav.cli:main"
 
