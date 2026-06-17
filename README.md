@@ -74,42 +74,43 @@ style F fill:#ffebee
 style G fill:#e0f2f1
 
 ```
-## Prerequisites
-**Python version supported:** ![Python version](https://img.shields.io/badge/python-3.10%20%7C%203.11%20%7C%203.12%20%7C%203.13-blue.svg)
+
+
 
 ## Installation
-To install the project and all required dependencies (`numpy`, `scipy`, `matplotlib`), navigate to the root of the repository, then install it using Make:
 
-**With Make (Linux / macOS / Windows via make.bat)**
+**Python version supported:** ![Python version](https://img.shields.io/badge/python-3.10%20%7C%203.11%20%7C%203.12%20%7C%203.13-blue.svg)
+
+To install the project and all required dependencies (`numpy`, `scipy`, `matplotlib`), navigate to the root of the repository and run the appropriate command for your operating system:
+
+**With Make (Linux / macOS)**
 ```bash
 make install
 ```
-Alternatively, you can install it in developer mode using 
+**For Windows users (or alternative developer mode)**
 ```bash
 pip install -e .[dev]
 ```
 ## Usage
 
-To run the calculation on the provided Campi Flegrei dataset and save the figures in images/:
+To run the calculation on the provided Campi Flegrei dataset:
 
-**Automated method:**
+**Automated method (Linux / macOS)**
 ```bash
 make run
 ```
-This will automatically create the results/ directory, execute fem4grav1 on the Flegrei.txt data, and save all generated maps into the `images` folder.
+This will automatically create the `results/` directory, execute fem4grav on the Flegrei.txt data, and save all generated maps into the `images/` folder.
 
-**Detailed Command Line method:**
+**Command Line method (Windows / Any OS)**
 
 If you want to apply fem4grav to your own Bouguer anomaly text files, you can use the direct CLI command. Your text file must contain exactly three columns (Longitude, Latitude, Anomaly).
+Ensure that the destination folders (`results/` and `images/`) exist before running the command, or create them manually.
 
 Example of a manual execution:
 ```bash
-fem4grav data/YourData.txt --irow 100 --icol 100 \
-    --output results/my_data.npz \
-    --table results/my_data_table.txt \
-    --save-plot images/my_maps.png
+fem4grav data/Flegrei.txt --irow 101 --icol 101 --output results/flegrei.npz --table results/flegrei_table.txt --save-plot images/flegrei_maps.png
 ```
-To view all available options and help:
+**To view all available options and help**
 ```bash
 fem4grav --help
 ```
@@ -122,7 +123,7 @@ To automate your calculations and easily reproduce them when modifying a paramet
 ```bash
 pip install snakemake
 ```
-**Step B:** Modify the project parameters by opening and editing the `config.yaml` file
+**Step B:** Modify the project parameters by opening and editing the [config.yaml](https://github.com/TagniAyissi/fem4grav1/blob/main/config.yaml) file.
 
 **Step C:** Launch the automated analysis pipeline with a specified number of CPU cores:
 
@@ -132,12 +133,18 @@ snakemake --cores 1
 ## Tests
 
 To verify that the installation was successful and the computations are accurate, run the unit test suite:
+**For Linux / macOS users**
 ```bash
 make test
 ```
+**For Windows users**
+```bash
+python -m pytest tests/ -v --cov=fem4grav --cov-report=term-missing
+```
+
 ## Contributing
 
-The project is open to contributions and suggestions, Just fill an issue and pull request
+The project is open to contributions and suggestions, Just fill an issue or a pull request.
 ## License
 
 The `fem4grav` package is licensed under the MIT [License](https://github.com/TagniAyissi/fem4grav1/blob/main/LICENSE).
