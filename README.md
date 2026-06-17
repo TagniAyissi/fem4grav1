@@ -1,6 +1,6 @@
 | **Project** | **Documentation** | **Build Status** | **Code Quality** | **Coverage** |
 |:-----------:|:-----------------:|:----------------:|:----------------:|:------------:|
-| **fem4grav1** | [![ReadTheDocs](https://readthedocs.org/projects/fem4grav1/badge/?version=latest)](https://fem4grav1.readthedocs.io/en/latest/?badge=latest) | [![fem4grav1 CI](https://github.com/TagniAyissi/fem4grav1/actions/workflows/python.yml/badge.svg)](https://github.com/TagniAyissi/fem4grav1/actions/workflows/python.yml) | [![Codacy Badge](https://app.codacy.com/project/badge/Grade/1d8921d71d55486591c1ee9b7d065690)](https://app.codacy.com/gh/TagniAyissi/fem4grav1/dashboard?utm_source=gh&utm_medium=referral&utm_content=&utm_campaign=Badge_grade) | [![codecov](https://codecov.io/github/TagniAyissi/fem4grav1/graph/badge.svg?token=ES25ABNV76)](https://codecov.io/github/TagniAyissi/fem4grav1) |
+| **fem4grav** | [![ReadTheDocs](https://readthedocs.org/projects/fem4grav1/badge/?version=latest)](https://fem4grav1.readthedocs.io/en/latest/?badge=latest) | [![fem4grav CI](https://github.com/TagniAyissi/fem4grav1/actions/workflows/python.yml/badge.svg)](https://github.com/TagniAyissi/fem4grav1/actions/workflows/python.yml) | [![Codacy Badge](https://app.codacy.com/project/badge/Grade/1d8921d71d55486591c1ee9b7d065690)](https://app.codacy.com/gh/TagniAyissi/fem4grav1/dashboard?utm_source=gh&utm_medium=referral&utm_content=&utm_campaign=Badge_grade) | [![codecov](https://codecov.io/github/TagniAyissi/fem4grav1/graph/badge.svg?token=ES25ABNV76)](https://codecov.io/github/TagniAyissi/fem4grav1) |
 
 <br>
 
@@ -18,7 +18,7 @@
   <img src="images/fem4grav1_logo.png" alt="Logo fem4grav1" width="360">
 </p>
 
-# fem4grav1 v0.0.1
+# fem4grav v0.0.1
 
 ## Table of Contents
 - [Overview](#overview)
@@ -32,7 +32,7 @@
 
 ## Overview
 
-**fem4grav1** is a geophysical processing tool designed for the regional-residual separation of gravity anomalies. Based on the Finite Element Method (FEM) using 8-node serendipity elements, this package allows for the isolation of local anomalies of geological interest from regional gravity data.
+**fem4grav** is a geophysical processing tool designed for the regional-residual separation of gravity anomalies. Based on the Finite Element Method (FEM) using 8-node serendipity elements, this package allows for the isolation of local anomalies of geological interest from regional gravity data.
 
 
 ## Theory
@@ -100,18 +100,18 @@ This will automatically create the results/ directory, execute fem4grav1 on the 
 
 **Detailed Command Line method:**
 
-If you want to apply fem4grav1 to your own Bouguer anomaly text files, you can use the direct CLI command. Your text file must contain exactly three columns (Longitude, Latitude, Anomaly).
+If you want to apply fem4grav to your own Bouguer anomaly text files, you can use the direct CLI command. Your text file must contain exactly three columns (Longitude, Latitude, Anomaly).
 
 Example of a manual execution:
 ```bash
-fem4grav1 data/YourData.txt --irow 100 --icol 100 \
+fem4grav data/YourData.txt --irow 100 --icol 100 \
     --output results/my_data.npz \
     --table results/my_data_table.txt \
     --save-plot images/my_maps.png
 ```
 To view all available options and help:
 ```bash
-fem4grav1 --help
+fem4grav --help
 ```
 
 **Execution with Snakemake**
@@ -137,8 +137,7 @@ make test
 ```
 ## Contributing
 
-The project is open to contributions and suggestions, just open an issue on the repo.
-
+The project is open to contributions and suggestions, Just fill an issue and pull request
 ## License
 
-The `fem4grav1` package is licensed under the MIT [License](https://github.com/TagniAyissi/fem4grav1/blob/main/LICENSE).
+The `fem4grav` package is licensed under the MIT [License](https://github.com/TagniAyissi/fem4grav1/blob/main/LICENSE).
