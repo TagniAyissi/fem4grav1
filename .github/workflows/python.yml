@@ -1,4 +1,4 @@
-name: fem4grav1 CI
+name: fem4grav CI
 
 on:
   push:
