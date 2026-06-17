@@ -19,7 +19,6 @@
 </p>
 
 # fem4grav1 v0.0.1
----
 
 ## Table of Contents
 - [Overview](#overview)
@@ -31,12 +30,10 @@
 - [Contributing](#contributing)
 - [License](#license)
 
----
 ## Overview
 
 **fem4grav1** is a geophysical processing tool designed for the regional-residual separation of gravity anomalies. Based on the Finite Element Method (FEM) using 8-node serendipity elements, this package allows for the isolation of local anomalies of geological interest from regional gravity data.
 
----
 
 ## Theory
 
@@ -49,7 +46,6 @@ The Bouguer anomaly observed in the field is the sum of two components:
 
 The regional field is estimated through interpolation of boundary conditions using eight-node serendipity finite elements. The residual anomaly is then obtained by simple subtraction of this regional field from the observed Bouguer anomaly.
 
----
 ## Workflow
 
 ```mermaid
@@ -78,7 +74,6 @@ style F fill:#ffebee
 style G fill:#e0f2f1
 
 ```
----
 ## Prerequisites
 **Python version supported:** ![Python version](https://img.shields.io/badge/python-3.10%20%7C%203.11%20%7C%203.12%20%7C%203.13-blue.svg)
 
@@ -93,7 +88,6 @@ Alternatively, you can install it in developer mode using
 ```bash
 pip install -e .[dev]
 ```
----
 ## Usage
 
 To run the calculation on the provided Campi Flegrei dataset and save the figures in images/:
@@ -135,19 +129,16 @@ pip install snakemake
 ```bash
 snakemake --cores 1
 ```
----
 ## Tests
 
 To verify that the installation was successful and the computations are accurate, run the unit test suite:
 ```bash
 make test
 ```
----
 ## Contributing
 
-The project is open to contributions and suggestions, just open an issue on the repo or contact me directly (contacts below).
+The project is open to contributions and suggestions, just open an issue on the repo.
 
----
 ## License
 
 The `fem4grav1` package is licensed under the MIT [License](https://github.com/TagniAyissi/fem4grav1/blob/main/LICENSE).
