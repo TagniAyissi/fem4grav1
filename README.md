@@ -133,6 +133,7 @@ snakemake --cores 1
 ## Tests
 
 To verify that the installation was successful and the computations are accurate, run the unit test suite:
+
 **For Linux / macOS users**
 ```bash
 make test
